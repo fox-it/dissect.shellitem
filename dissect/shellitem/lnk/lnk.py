@@ -1,10 +1,12 @@
-from io import BytesIO
 import logging
+
+from io import BytesIO
 from struct import unpack
-from typing import Any, BinaryIO, Dict, Optional, Union
+from typing import Any, BinaryIO, Optional
 from uuid import UUID
 
 from dissect.util.stream import RangeStream
+
 from dissect.shellitem.lnk.c_lnk import (
     c_lnk,
     LINK_HEADER_SIZE,
@@ -13,8 +15,6 @@ from dissect.shellitem.lnk.c_lnk import (
     LINK_EXTRA_DATA_HEADER_SIZE,
     LINK_INFO_BODY_SIZE,
 )
-
-# SHELL_LINK = SHELL_LINK_HEADER [LINKTARGET_IDLIST] [LINKINFO] [STRING_DATA] *EXTRA_DATA
 
 log = logging.getLogger(__name__)
 logging.lastResort = None
@@ -44,44 +44,36 @@ class LnkExtraData:
             self._parse(fh)
 
     def _parse(self, fh: BinaryIO) -> None:
-        self.size = unpack("I", fh.read(4))[0]
+        self.size = c_lnk.uint32(fh)
 
         if self.size == 0x00000000:
             # terminal block encountered. end of lnk file
             self.extradata.update({"TERMINAL_BLOCK": c_lnk.EXTRA_DATA(extra_data_block=None, terminal_block=self.size)})
             return
 
-        signature = unpack("I", fh.read(4))[0]
+        signature = c_lnk.uint32(fh)
         block_name = self._get_block_name(signature)
 
         if block_name:
             read_size = self.size - LINK_EXTRA_DATA_HEADER_SIZE
+            struct = c_lnk.typedefs[block_name](fh.read(read_size))
 
             if block_name == "PROPERTY_STORE_PROPS":
                 # TODO implement actual serialized property parsing
-                struct = c_lnk.PROPERTY_STORE_PROPS(fh.read(read_size))
-
                 guid = self._parse_guid(struct.format_id)
                 struct._values.update({"format_id": guid})
-                self.extradata.update({block_name: struct})
+
             elif block_name == "VISTA_AND_ABOVE_IDLIST_PROPS":
                 # we reuse LnkTargetIdlist since vista_idlist_props are basically the same.
-                vista_and_above_idlist = LnkTargetIdList(fh, read_size)
-                self.extradata.update({block_name: vista_and_above_idlist})
+                struct = LnkTargetIdList(fh, read_size)
 
             elif block_name == "TRACKER_PROPS":
-                struct = c_lnk.TRACKER_PROPS(fh.read(read_size))
-
                 for name, value in struct._values.items():
                     if "droid" in name:
                         guid = self._parse_guid(value)
                         struct._values.update({name: guid})
 
-                self.extradata.update({block_name: struct})
-
             elif block_name == "KNOWN_FOLDER_PROPS":
-                struct = c_lnk.KNOWN_FOLDER_PROPS(fh.read(read_size))
-
                 guid = self._parse_guid(struct.known_folder_id)
                 struct._values.update({"known_folder_id": guid})
 
@@ -90,20 +82,14 @@ class LnkExtraData:
                 or block_name == "ICON_ENVIRONMENT_PROPS"
                 or block_name == "DARWIN_PROPS"
             ):
-
-                struct = c_lnk.typedefs[block_name](fh.read(read_size))
-
                 if block_name == "DARWIN_PROPS":
                     struct.darwin_data_ansi = struct.darwin_data_ansi
                     struct.darwin_data_unicode = struct.darwin_data_unicode.decode().rstrip("\x00")
                 else:
                     struct.target_ansi = struct.target_ansi
                     struct.target_unicode = struct.target_unicode.decode("utf-16").rstrip("\x00")
-                self.extradata.update({block_name: struct})
 
-            else:
-                struct = c_lnk.typedefs[block_name](fh.read(read_size))
-                self.extradata.update({block_name: struct})
+            self.extradata.update({block_name: struct})
 
         else:
             log.error(f"Unknown extra data block encountered with signature 0x{signature:x}")
@@ -111,10 +97,10 @@ class LnkExtraData:
         # keep calling parse untill the TERMINAL_BLOCK is hit.
         self._parse(fh)
 
-    def _get_block_name(self, signature: Dict) -> Union[str, None]:
-        for block_name, _signature in EXTRA_DATA_BLOCK_SIGNATURES.items():
-            if signature == _signature:
-                return block_name
+    def _get_block_name(self, signature: int) -> Optional[str]:
+        for _signature in EXTRA_DATA_BLOCK_SIGNATURES:
+            if signature == _signature.value:
+                return _signature.name
         return None
 
     def _parse_guid(self, guid: bytes, endianness: str = "<") -> UUID:
@@ -130,15 +116,15 @@ class LnkExtraData:
             return object.__getattribute__(self, attr)
 
     def __repr__(self) -> str:
-        if self.extradata:
-            return "\n".join(f"{value}" for value in [*self.extradata.values()])
-        else:
-            return "<EXTRA_DATA>"
+        value_string = " ".join(f"{value}" for value in self.extradata.values())
+        return value_string
 
 
 class LnkStringData:
     """This class represents the LNK file's STING_DATA structure. The STRING_DATA structure refers to a set of
     structures that convey user interface and path identification information.
+
+    STRING_DATA = [NAME_STRING] [RELATIVE_PATH] [WORKING_DIR] [COMMAND_LINE_ARGUMENTS] [ICON_LOCATION]
 
     Args:
         fh: A file-lke object to a STRING_DATA structure
@@ -146,7 +132,6 @@ class LnkStringData:
     """
 
     def __init__(self, fh: Optional[BinaryIO] = None, lnk_flags: Optional[c_lnk.LINK_FLAGS] = None):
-        # STRING_DATA = [NAME_STRING] [RELATIVE_PATH] [WORKING_DIR] [COMMAND_LINE_ARGUMENTS] [ICON_LOCATION]
         self.flags = None
         self.string_data = None
         if fh:
@@ -164,22 +149,21 @@ class LnkStringData:
         )
 
         for flag, string_data_name in flag_names:
-            if self.flags[flag]:
+            if self.flags & self.flags.enum[flag]:
                 string_data = self._get_stringdata(fh)
                 self.string_data.update({string_data_name: string_data})
 
     def _get_stringdata(self, fh: BinaryIO) -> c_lnk.STRING_DATA:
-        # STING_DATA structs have a size called character_count
-        # this size (character_count) should be dubbled when unicode is used
-        if self.flags.is_unicode:
+        # STRING_DATA structs have a size called character_count
+        # this size (character_count) should be doubled when unicode is used
+        if self.flags & self.flags.enum.is_unicode:
             size = unpack("H", fh.read(2))[0] * 2
             data = fh.read(size).decode("utf-16")
         else:
             size = unpack("H", fh.read(2))[0]
             data = fh.read(size)
 
-        string_data = c_lnk.STRING_DATA(character_count=size, string=data)
-        return string_data
+        return c_lnk.STRING_DATA(character_count=size, string=data)
 
     def __getattr__(self, attr: str) -> Any:
         try:
@@ -188,10 +172,8 @@ class LnkStringData:
             return object.__getattribute__(self, attr)
 
     def __repr__(self) -> str:
-        if self.string_data:
-            return "\n".join(f"{value}" for value in [*self.string_data.values()])
-        else:
-            return "<STRING_DATA>"
+        value_string = " ".join(f"{value}" for value in self.string_data.values())
+        return value_string
 
 
 class LnkInfo:
@@ -242,7 +224,7 @@ class LnkInfo:
         device_name = None
         volumeid = None
 
-        if self.flags.volumeid_and_local_basepath:
+        if self.flag("volumeid_and_local_basepath"):
             volumeid_size = unpack("I", buff.read(4))[0]
             buff.seek(offset)
             volumeid = c_lnk.VOLUME_ID(buff.read(volumeid_size))
@@ -254,20 +236,20 @@ class LnkInfo:
             # put pointer back before common_path_suffix
             buff.seek(self.linkinfo_body.common_network_relative_link_offset)
 
-        if self.flags.common_network_relative_link_and_pathsuffix:
+        if self.flag("common_network_relative_link_and_pathsuffix"):
             start_common_network_relative_link = buff.tell()
             # read the size of the common_network_relative_link_size. This is 20 bytes
             header = c_lnk.COMMON_NETWORK_RELATIVE_LINK_HEADER(buff.read(20))
             flags = header.common_network_relative_link_flags
 
-            if flags.valid_device:
+            if flags & flags.enum.valid_device:
                 offset = buff.seek(start_common_network_relative_link + header.device_name_offset)
                 device_name = c_lnk.DEVICE_NAME(buff.read())
                 read_size = len(device_name.dumps())
                 device_name = device_name.device_name
                 buff.seek(offset + read_size)
 
-            if flags.valid_net_type:
+            if flags & flags.enum.valid_net_type:
                 offset = buff.seek(start_common_network_relative_link + header.net_name_offset)
                 net_name = c_lnk.NET_NAME(buff.read())
                 read_size = len(net_name.dumps())
@@ -300,6 +282,17 @@ class LnkInfo:
             common_network_relative_link=common_network_relative_link,
             common_path_suffix=common_path_suffix,
         )
+
+    def flag(self, name: str) -> int:
+        """Retuns whether supplied flag is set.
+
+        Args:
+            name: Name of the flag
+
+        Returns:
+            int: >0 if flag is set
+        """
+        return self.flags & self.flags.enum[name]
 
     def __getattr__(self, attr: str) -> Any:
         try:
@@ -336,9 +329,10 @@ class LnkTargetIdList:
         idlists = []
         buff = BytesIO(buff)
 
+        # the size of the target_idlist struct includes itself. Thus we minus 2 here.
         while buff.tell() < self.size - 2:
             size = unpack("H", buff.read(2))[0]
-            data = buff.read(size - 2)  # size of the struct includes the 16-bit size value. Thus we minus 2 here
+            data = buff.read(size - 2)  # size of the struct includes the 16-bit size value. Thus we minus 2 here again.
             itemid = c_lnk.ITEMID(itemid_size=size, data=data)
             idlists.append(itemid)
 
@@ -346,7 +340,7 @@ class LnkTargetIdList:
         self.target_idlist = c_lnk.LINK_TARGET_IDLIST(idlist_size=self.size, idlist=self.idlist)
 
     def __repr__(self) -> str:
-        return self.target_idlist.__repr__()
+        return repr(self.target_idlist)
 
 
 class Lnk:
@@ -375,7 +369,6 @@ class Lnk:
         stringdata: Optional[LnkStringData] = None,
         extradata: Optional[LnkExtraData] = None,
     ):
-        self.entry = fh
         self.fh = fh.open("rb")
         self.flags = None
         self.link_header = self._parse_header(self.fh)
@@ -387,24 +380,35 @@ class Lnk:
         if self.link_header:
             self.flags = self.link_header.link_flags
 
-            if self.flags.has_link_target_idlist:
+            if self.flag("has_link_target_idlist"):
                 self.target_idlist = LnkTargetIdList(self.fh)
 
-            if self.flags.has_link_info:
+            if self.flag("has_link_info"):
                 self.linkinfo = LnkInfo(self.fh)
 
             if (
-                self.flags.has_name
-                or self.flags.has_relative_path
-                or self.flags.has_working_dir
-                or self.flags.has_arguments
-                or self.flags.has_icon_location
+                self.flag("has_name")
+                or self.flag("has_relative_path")
+                or self.flag("has_working_dir")
+                or self.flag("has_arguments")
+                or self.flag("has_icon_location")
             ):
                 self.stringdata = LnkStringData(self.fh, self.flags)
 
             self.extradata = LnkExtraData(self.fh)
 
-    def _parse_header(self, fh: BinaryIO) -> Union[c_lnk.SHELL_LINK_HEADER, None]:
+    def flag(self, name: str) -> int:
+        """Retuns whether supplied flag is set.
+
+        Args:
+            name: Name of the flag
+
+        Returns:
+            int: >0 if flag is set
+        """
+        return self.flags & self.flags.enum[name]
+
+    def _parse_header(self, fh: Optional[BinaryIO]) -> Optional[c_lnk.SHELL_LINK_HEADER]:
         header_size = unpack("I", fh.read(4))[0]
         fh.seek(0)
 
@@ -415,14 +419,14 @@ class Lnk:
             if link_header.link_clsid == "00021401-0000-0000-c000-000000000046":
                 return link_header
             else:
-                log.info(f"Encountered invalid link file header: {link_header}. Skipping: {self.entry}")
+                log.info(f"Encountered invalid link file header: {link_header}. Skipping.")
                 return None
         else:
             log.info(
                 f"Encountered invalid link file with magic header size 0x{header_size:x} - "
-                f"magic header size should be 0x{LINK_HEADER_SIZE:x}. Skipping {self.entry}"
+                f"magic header size should be 0x{LINK_HEADER_SIZE:x}. Skipping."
             )
             return None
 
     def __repr__(self) -> str:
-        return f"{self.link_header}\n\n{self.target_idlist}\n\n{self.linkinfo.link_info}\n\n{self.stringdata}\n\n{self.extradata}"  # noqa E501
+        return f"{self.link_header} {self.target_idlist} {self.linkinfo.link_info} {self.stringdata} {self.extradata}"
