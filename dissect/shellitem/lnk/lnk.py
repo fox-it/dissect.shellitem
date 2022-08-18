@@ -143,7 +143,7 @@ class LnkStringData:
         )
 
         for flag, string_data_name in flag_names:
-            if self.flags & self.flags.enum[flag]:
+            if self.flags & c_lnk.LINK_FLAGS[flag]:
                 string_data = self._get_stringdata(fh)
                 self.string_data.update({string_data_name: string_data})
 

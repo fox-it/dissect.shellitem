@@ -1,4 +1,5 @@
 from enum import IntEnum
+from typing import Optional
 from dissect import cstruct
 
 # structs are reconstructed as faithfull as possible from MS documentation
@@ -353,22 +354,38 @@ class EXTRA_DATA_BLOCK_SIGNATURES(IntEnum):
     VISTA_AND_ABOVE_IDLIST_PROPS = 0xA000000C
 
     @classmethod
-    def get_name(cls, value):
+    def get_name(cls, value: int) -> Optional[str]:
+        """Get the name belonging to the passed value, without raising a ValueError.
+
+        Args:
+            value: Integer value to find the name for
+
+        Returns:
+            The name belonging to the passed integer value, else None
+        """
         if cls._has_value(value):
             return cls(value).name
 
     @classmethod
-    def _has_value(cls, value):
+    def _has_value(cls, value: int) -> bool:
+        """Check if the passed value exists, without raising a ValueError.
+
+        Args:
+            value: Integer value to check the existence for.
+
+        Returns:
+            Whether the value exists.
+        """
         return value in cls._value2member_map_
 
 
 LINK_HEADER_SIZE = 0x4C
-LINK_INFO_HEADER_SIZE = 12
-LINK_INFO_BODY_SIZE = 16
-LINK_EXTRA_DATA_HEADER_SIZE = 8
+LINK_INFO_HEADER_SIZE = 0x0C
+LINK_INFO_BODY_SIZE = 0x10
+LINK_EXTRA_DATA_HEADER_SIZE = 0x08
 
 
-JUMPLIST_HEADER_SIZE = 36
+JUMPLIST_HEADER_SIZE = 0x24
 JUMPLIST_FOOTER = 0xBABFFBAB
 
 c_lnk = cstruct.cstruct()
