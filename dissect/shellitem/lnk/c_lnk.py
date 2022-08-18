@@ -352,6 +352,15 @@ class EXTRA_DATA_BLOCK_SIGNATURES(IntEnum):
     TRACKER_PROPS = 0xA0000003
     VISTA_AND_ABOVE_IDLIST_PROPS = 0xA000000C
 
+    @classmethod
+    def get_name(cls, value):
+        if cls._has_value(value):
+            return cls(value).name
+
+    @classmethod
+    def _has_value(cls, value):
+        return value in cls._value2member_map_
+
 
 LINK_HEADER_SIZE = 0x4C
 LINK_INFO_HEADER_SIZE = 12

@@ -52,11 +52,12 @@ class LnkExtraData:
             return
 
         signature = c_lnk.uint32(fh)
-        block_name = self._get_block_name(signature)
+        block_name = EXTRA_DATA_BLOCK_SIGNATURES.get_name(signature)
 
         if block_name:
             read_size = self.size - LINK_EXTRA_DATA_HEADER_SIZE
-            struct = c_lnk.typedefs[block_name](fh.read(read_size))
+            block_data = memoryview(fh.read(read_size))
+            struct = c_lnk.typedefs[block_name](block_data)
 
             if block_name == "PROPERTY_STORE_PROPS":
                 # TODO implement actual serialized property parsing
@@ -64,8 +65,7 @@ class LnkExtraData:
                 struct._values.update({"format_id": guid})
 
             elif block_name == "VISTA_AND_ABOVE_IDLIST_PROPS":
-                # we reuse LnkTargetIdlist since vista_idlist_props are basically the same.
-                struct = LnkTargetIdList(fh, read_size)
+                struct = LnkTargetIdList(BytesIO(block_data), read_size)
 
             elif block_name == "TRACKER_PROPS":
                 for name, value in struct._values.items():
@@ -96,12 +96,6 @@ class LnkExtraData:
 
         # keep calling parse untill the TERMINAL_BLOCK is hit.
         self._parse(fh)
-
-    def _get_block_name(self, signature: int) -> Optional[str]:
-        for _signature in EXTRA_DATA_BLOCK_SIGNATURES:
-            if signature == _signature.value:
-                return _signature.name
-        return None
 
     def _parse_guid(self, guid: bytes, endianness: str = "<") -> UUID:
         if endianness == "<":
@@ -156,11 +150,11 @@ class LnkStringData:
     def _get_stringdata(self, fh: BinaryIO) -> c_lnk.STRING_DATA:
         # STRING_DATA structs have a size called character_count
         # this size (character_count) should be doubled when unicode is used
-        if self.flags & self.flags.enum.is_unicode:
-            size = unpack("H", fh.read(2))[0] * 2
+        size = unpack("H", fh.read(2))[0]
+        if self.flags & c_lnk.LINK_FLAGS.is_unicode:
+            size = size * 2
             data = fh.read(size).decode("utf-16")
         else:
-            size = unpack("H", fh.read(2))[0]
             data = fh.read(size)
 
         return c_lnk.STRING_DATA(character_count=size, string=data)
@@ -292,7 +286,7 @@ class LnkInfo:
         Returns:
             int: >0 if flag is set
         """
-        return self.flags & self.flags.enum[name]
+        return self.flags & c_lnk.LINK_INFO_FLAGS[name]
 
     def __getattr__(self, attr: str) -> Any:
         try:
@@ -406,7 +400,7 @@ class Lnk:
         Returns:
             int: >0 if flag is set
         """
-        return self.flags & self.flags.enum[name]
+        return self.flags & c_lnk.LINK_FLAGS[name]
 
     def _parse_header(self, fh: Optional[BinaryIO]) -> Optional[c_lnk.SHELL_LINK_HEADER]:
         header_size = unpack("I", fh.read(4))[0]

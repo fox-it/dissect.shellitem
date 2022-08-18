@@ -1,4 +1,4 @@
-from dissect.shellitem.lnk import Lnk
+from dissect.shellitem.lnk import Lnk, c_lnk
 from dissect.util.ts import uuid1timestamp
 
 
@@ -10,27 +10,27 @@ def test_xp_remote_lnk_file(xp_remote_lnk_file):
 
     flags = lnk_file.flags
 
-    assert flags & flags.enum.has_link_target_idlist
+    assert flags & c_lnk.LINK_FLAGS.has_link_target_idlist
     idlist = lnk_file.target_idlist.idlist
     assert len(idlist.itemid_list) == 9
     assert idlist.terminalid == b"\x00\x00"
     assert all([entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list])
 
-    assert flags & flags.enum.has_link_info
+    assert flags & c_lnk.LINK_FLAGS.has_link_info
     link_info = lnk_file.linkinfo.link_info
     link_info_flags = link_info.link_info_flags
-    assert link_info_flags & link_info_flags.enum.volumeid_and_local_basepath == 0
-    assert link_info_flags & link_info_flags.enum.common_network_relative_link_and_pathsuffix
+    assert link_info_flags & c_lnk.LINK_INFO_FLAGS.volumeid_and_local_basepath == 0
+    assert link_info_flags & c_lnk.LINK_INFO_FLAGS.common_network_relative_link_and_pathsuffix
 
     common_network_relative_link = lnk_file.linkinfo.common_network_relative_link
     assert (
         common_network_relative_link.common_network_relative_link_flags
-        & common_network_relative_link.common_network_relative_link_flags.enum.valid_device
+        & c_lnk.COMMON_NETWORK_RELATIVE_LINK_FLAGS.valid_device
         == 0
     )
     assert (
         common_network_relative_link.common_network_relative_link_flags
-        & common_network_relative_link.common_network_relative_link_flags.enum.valid_net_type
+        & c_lnk.COMMON_NETWORK_RELATIVE_LINK_FLAGS.valid_net_type
     )
     assert common_network_relative_link.net_name_offset == 0x14
     assert common_network_relative_link.device_name_offset == 0x0
@@ -39,7 +39,7 @@ def test_xp_remote_lnk_file(xp_remote_lnk_file):
     assert common_network_relative_link.net_name == b"\\\\ALS-FICHIERS3\\QUALIT\xc9"
     assert link_info.common_path_suffix == b"Archives\\M\xe9thodologie WAS\\Norme de d\xe9veloppement JAVA.doc"
 
-    assert flags & flags.enum.has_working_dir
+    assert flags & c_lnk.LINK_FLAGS.has_working_dir
     assert len(lnk_file.stringdata.string_data) == 1
     working_dir = lnk_file.stringdata.string_data["working_dir"]
     assert working_dir.character_count == 0x62
@@ -62,27 +62,27 @@ def test_xp_remote_lnk_dir(xp_remote_lnk_dir):
 
     flags = lnk_file.flags
 
-    assert flags & flags.enum.has_link_target_idlist
+    assert flags & c_lnk.LINK_FLAGS.has_link_target_idlist
     idlist = lnk_file.target_idlist.idlist
     assert len(idlist.itemid_list) == 7
     assert idlist.terminalid == b"\x00\x00"
     assert all([entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list])
 
-    assert flags & flags.enum.has_link_info
+    assert flags & c_lnk.LINK_FLAGS.has_link_info
     link_info = lnk_file.linkinfo.link_info
     link_info_flags = link_info.link_info_flags
-    assert link_info_flags & link_info_flags.enum.volumeid_and_local_basepath == 0
-    assert link_info_flags & link_info_flags.enum.common_network_relative_link_and_pathsuffix
+    assert link_info_flags & c_lnk.LINK_INFO_FLAGS.volumeid_and_local_basepath == 0
+    assert link_info_flags & c_lnk.LINK_INFO_FLAGS.common_network_relative_link_and_pathsuffix
 
     common_network_relative_link = lnk_file.linkinfo.common_network_relative_link
     assert (
         common_network_relative_link.common_network_relative_link_flags
-        & common_network_relative_link.common_network_relative_link_flags.enum.valid_device
+        & c_lnk.COMMON_NETWORK_RELATIVE_LINK_FLAGS.valid_device
         == 0
     )
     assert (
         common_network_relative_link.common_network_relative_link_flags
-        & common_network_relative_link.common_network_relative_link_flags.enum.valid_net_type
+        & c_lnk.COMMON_NETWORK_RELATIVE_LINK_FLAGS.valid_net_type
     )
 
     assert common_network_relative_link.net_name_offset == 0x14
@@ -109,17 +109,17 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir):
 
     flags = lnk_file.flags
 
-    assert flags & flags.enum.has_link_target_idlist
+    assert flags & c_lnk.LINK_FLAGS.has_link_target_idlist
     idlist = lnk_file.target_idlist.idlist
     assert len(idlist.itemid_list) == 4
     assert idlist.terminalid == b"\x00\x00"
     assert all([entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list])
 
-    assert flags & flags.enum.has_link_info
+    assert flags & c_lnk.LINK_FLAGS.has_link_info
     link_info = lnk_file.linkinfo.link_info
     link_info_flags = link_info.link_info_flags
-    assert link_info_flags & link_info_flags.enum.volumeid_and_local_basepath
-    assert link_info_flags & link_info_flags.enum.common_network_relative_link_and_pathsuffix
+    assert link_info_flags & c_lnk.LINK_INFO_FLAGS.volumeid_and_local_basepath
+    assert link_info_flags & c_lnk.LINK_INFO_FLAGS.common_network_relative_link_and_pathsuffix
     assert link_info.local_base_path == b"C:\\Users\\"
 
     volumeid = lnk_file.linkinfo.volumeid
@@ -131,12 +131,12 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir):
     common_network_relative_link = lnk_file.linkinfo.common_network_relative_link
     assert (
         common_network_relative_link.common_network_relative_link_flags
-        & common_network_relative_link.common_network_relative_link_flags.enum.valid_device
+        & c_lnk.COMMON_NETWORK_RELATIVE_LINK_FLAGS.valid_device
         == 0
     )
     assert (
         common_network_relative_link.common_network_relative_link_flags
-        & common_network_relative_link.common_network_relative_link_flags.enum.valid_net_type
+        & c_lnk.COMMON_NETWORK_RELATIVE_LINK_FLAGS.valid_net_type
     )
 
     assert common_network_relative_link.net_name_offset == 0x14
@@ -145,7 +145,7 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir):
     assert common_network_relative_link.net_provider_type == 0x20000
     assert common_network_relative_link.net_name == b"\\\\NETBOOK\\Users"
 
-    assert flags & flags.enum.has_relative_path
+    assert flags & c_lnk.LINK_FLAGS.has_relative_path
     assert lnk_file.stringdata.relative_path.character_count == 0x26
     assert lnk_file.stringdata.relative_path.string == "..\\..\\Administrator"
 
