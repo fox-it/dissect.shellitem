@@ -34,7 +34,7 @@ def parse(path: Path):
             else None
         )
         common_path_suffix = (
-            lnk_file.linkinfo.common_path_suffix.decode(errors='ignore')
+            lnk_file.linkinfo.common_path_suffix.decode(errors="ignore")
             if lnk_file.flag("has_link_info")
             else None
         )
