@@ -29,12 +29,12 @@ def parse(path: Path):
         lnk_iconlocation = lnk_file.stringdata.icon_location.string if lnk_file.flag("has_icon_location") else None
         lnk_arguments = lnk_file.stringdata.command_line_arguments.string if lnk_file.flag("has_arguments") else None
         local_base_path = (
-            lnk_file.linkinfo.local_base_path.decode("raw_unicode_escape")
+            lnk_file.linkinfo.local_base_path.decode(errors="ignore")
             if lnk_file.flag("has_link_info") and lnk_file.linkinfo.flag("volumeid_and_local_basepath")
             else None
         )
         common_path_suffix = (
-            lnk_file.linkinfo.common_path_suffix.decode("raw_unicode_escape")
+            lnk_file.linkinfo.common_path_suffix.decode(errors='ignore')
             if lnk_file.flag("has_link_info")
             else None
         )
@@ -49,12 +49,12 @@ def parse(path: Path):
         if lnk_file.flag("has_link_info"):
             if lnk_file.linkinfo.flag("common_network_relative_link_and_pathsuffix"):
                 lnk_net_name = (
-                    lnk_file.linkinfo.common_network_relative_link.net_name.decode("raw_unicode_escape")
+                    lnk_file.linkinfo.common_network_relative_link.net_name.decode(errors="ignore")
                     if lnk_file.linkinfo.common_network_relative_link.net_name
                     else None
                 )
                 lnk_device_name = (
-                    lnk_file.linkinfo.common_network_relative_link.device_name.decode("raw_unicode_escape")
+                    lnk_file.linkinfo.common_network_relative_link.device_name.decode(errors="ignore")
                     if lnk_file.linkinfo.common_network_relative_link.device_name
                     else None
                 )
