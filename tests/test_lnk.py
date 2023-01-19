@@ -1,5 +1,6 @@
-from dissect.shellitem.lnk import Lnk, c_lnk
 from dissect.util.ts import uuid1timestamp
+
+from dissect.shellitem.lnk import Lnk, c_lnk
 
 
 def test_xp_remote_lnk_file(xp_remote_lnk_file):
