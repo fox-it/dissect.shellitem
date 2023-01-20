@@ -162,3 +162,15 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir):
     assert property_store_props.storage_size == 0xAC
     assert property_store_props.version == 0x53505331
     assert str(property_store_props.format_id) == "b725f130-47ef-101a-a5f1-02608c9eebac"
+
+
+def test_common_path_suffix(win81_downloads_lnk_dir):
+    downloads = Lnk(win81_downloads_lnk_dir)
+
+    link_info = downloads.linkinfo.link_info
+    link_info_flags = link_info.link_info_flags
+    # edge-case were common_network_relative_link_and_pathsuffix indicates no common_path_suffix
+    # but when reality says otherwise.
+    assert link_info_flags & c_lnk.LINK_INFO_FLAGS.common_network_relative_link_and_pathsuffix == 0
+    assert link_info.common_path_suffix == b""
+    assert link_info.common_path_suffix.decode() == ""
