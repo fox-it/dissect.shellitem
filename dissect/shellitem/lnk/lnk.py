@@ -1,5 +1,4 @@
 import logging
-
 from io import BytesIO
 from struct import unpack
 from typing import Any, BinaryIO, Optional
@@ -8,12 +7,12 @@ from uuid import UUID
 from dissect.util.stream import RangeStream
 
 from dissect.shellitem.lnk.c_lnk import (
-    c_lnk,
-    LINK_HEADER_SIZE,
-    LINK_INFO_HEADER_SIZE,
     EXTRA_DATA_BLOCK_SIGNATURES,
     LINK_EXTRA_DATA_HEADER_SIZE,
+    LINK_HEADER_SIZE,
     LINK_INFO_BODY_SIZE,
+    LINK_INFO_HEADER_SIZE,
+    c_lnk,
 )
 
 log = logging.getLogger(__name__)
