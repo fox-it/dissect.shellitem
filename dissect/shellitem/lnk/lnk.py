@@ -408,9 +408,9 @@ class Lnk:
 
         if header_size == LINK_HEADER_SIZE:
             link_header = c_lnk.SHELL_LINK_HEADER(fh.read(LINK_HEADER_SIZE))
-            link_header.link_clsid = str(UUID(bytes_le=link_header.link_clsid))
+            link_clsid = str(UUID(bytes_le=link_header.link_clsid))
 
-            if link_header.link_clsid == "00021401-0000-0000-c000-000000000046":
+            if link_clsid == "00021401-0000-0000-c000-000000000046":
                 return link_header
             else:
                 log.info(f"Encountered invalid link file header: {link_header}. Skipping.")
@@ -421,6 +421,11 @@ class Lnk:
                 f"magic header size should be 0x{LINK_HEADER_SIZE:x}. Skipping."
             )
             return None
+
+    @property
+    def clsid(self) -> UUID:
+        """Returns the class id (clsid) of the LNK file."""
+        return UUID(bytes_le=self.link_header.link_clsid)
 
     def __repr__(self) -> str:
         return f"{self.link_header} {self.target_idlist} {self.linkinfo.link_info} {self.stringdata} {self.extradata}"
