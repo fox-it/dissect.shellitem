@@ -6,7 +6,6 @@ from dissect.util import ts
 
 from dissect.shellitem.lnk import Lnk
 
-
 log = logging.getLogger(__name__)
 logging.lastResort = None
 logging.raiseExceptions = False

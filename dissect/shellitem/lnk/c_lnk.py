@@ -1,5 +1,6 @@
 from enum import IntEnum
 from typing import Optional
+
 from dissect import cstruct
 
 # structs are reconstructed as faithfull as possible from MS documentation
