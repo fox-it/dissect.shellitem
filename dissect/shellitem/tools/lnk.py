@@ -46,11 +46,13 @@ def parse(path: Path):
         if lnk_file.flag("has_link_info"):
             if lnk_file.linkinfo.flag("common_network_relative_link_and_pathsuffix"):
                 lnk_net_name = (
+                    # TODO add codepage CLI flag to decode for supplied codepage
                     lnk_file.linkinfo.common_network_relative_link.net_name.decode(errors="ignore")
                     if lnk_file.linkinfo.common_network_relative_link.net_name
                     else None
                 )
                 lnk_device_name = (
+                    # TODO add codepage CLI flag to decode for supplied codepage
                     lnk_file.linkinfo.common_network_relative_link.device_name.decode(errors="ignore")
                     if lnk_file.linkinfo.common_network_relative_link.device_name
                     else None
@@ -92,11 +94,17 @@ def main():
         description="Parse a .lnk file from your local disk.",
     )
 
-    parser.add_argument("path", metavar="path", type=str, help="Path to .lnk file(s).")
+    parser.add_argument("paths", metavar="paths", type=str, nargs="+", help="Path to .lnk file(s).")
 
     args = parser.parse_args()
-    path = Path(args.path)
-    parse(path)
+
+    for path in args.paths:
+        path = Path(path)
+
+        if path.is_dir():
+            continue
+
+        parse(Path(path))
 
 
 if __name__ == "__main__":
