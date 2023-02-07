@@ -7,7 +7,7 @@ def test_xp_remote_lnk_file(xp_remote_lnk_file):
     lnk_file = Lnk(xp_remote_lnk_file)
 
     assert lnk_file.link_header.header_size == 0x4C
-    assert lnk_file.link_header.link_clsid == "00021401-0000-0000-c000-000000000046"
+    assert str(lnk_file.clsid) == "00021401-0000-0000-c000-000000000046"
 
     flags = lnk_file.flags
 
@@ -59,7 +59,7 @@ def test_xp_remote_lnk_file(xp_remote_lnk_file):
 def test_xp_remote_lnk_dir(xp_remote_lnk_dir):
     lnk_file = Lnk(xp_remote_lnk_dir)
     assert lnk_file.link_header.header_size == 0x4C
-    assert lnk_file.link_header.link_clsid == "00021401-0000-0000-c000-000000000046"
+    assert str(lnk_file.clsid) == "00021401-0000-0000-c000-000000000046"
 
     flags = lnk_file.flags
 
@@ -106,7 +106,7 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir):
     lnk_file = Lnk(win7_local_lnk_dir)
 
     assert lnk_file.link_header.header_size == 0x4C
-    assert lnk_file.link_header.link_clsid == "00021401-0000-0000-c000-000000000046"
+    assert str(lnk_file.clsid) == "00021401-0000-0000-c000-000000000046"
 
     flags = lnk_file.flags
 

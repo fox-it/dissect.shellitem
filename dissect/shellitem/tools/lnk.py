@@ -12,7 +12,6 @@ logging.raiseExceptions = False
 
 
 def parse(path: Path):
-
     lnk_file = Lnk(path)
     lnk_net_name = lnk_device_name = None
 
@@ -89,7 +88,6 @@ def parse(path: Path):
 
 
 def main():
-
     parser = argparse.ArgumentParser(
         description="Parse a .lnk file from your local disk.",
     )
