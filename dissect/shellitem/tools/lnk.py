@@ -85,7 +85,7 @@ def parse(path: Path):
             f"Machine id link\t\t\t: {machine_id}\n"
             f"Target file modification time\t: {target_mtime}\n"
             f"Target file access time\t\t: {target_atime}\n"
-            f"Target file changed time\t: {target_ctime}"
+            f"Target file changed time\t: {target_ctime}\n"
         )
 
 
@@ -95,8 +95,13 @@ def main():
     )
 
     parser.add_argument("paths", metavar="paths", type=str, nargs="+", help="Path to .lnk file(s).")
+    parser.add_argument("-v", "--verbose", action="count", default=0, help="Increase verbosity")
 
     args = parser.parse_args()
+
+    levels = [logging.WARNING, logging.INFO, logging.DEBUG]
+    level = levels[min(len(levels) - 1, args.verbose)]
+    logging.basicConfig(level=level, format="%(asctime)s %(levelname)s %(message)s")
 
     for path in args.paths:
         path = Path(path)

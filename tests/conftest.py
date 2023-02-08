@@ -25,4 +25,4 @@ def win7_local_lnk_dir():
 
 @pytest.fixture
 def win81_downloads_lnk_dir():
-    return Path(absolute_path('data/downloads.win81.lnk'))
+    return Path(absolute_path("data/downloads.win81.lnk"))

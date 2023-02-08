@@ -1,7 +1,8 @@
 import logging
 from io import BytesIO
+from pathlib import Path
 from struct import unpack
-from typing import Any, BinaryIO, Optional
+from typing import Any, BinaryIO, Optional, Union
 from uuid import UUID
 
 from dissect.util.stream import RangeStream
@@ -56,6 +57,21 @@ class LnkExtraData:
         if block_name:
             read_size = self.size - LINK_EXTRA_DATA_HEADER_SIZE
             block_data = memoryview(fh.read(read_size))
+
+            if len(block_data) != read_size:
+                import ipdb
+
+                ipdb.set_trace()
+                # Some malicous lnk files have a mismatch in the size indicated in the data block and actual bytes red.
+                # This causes cstruct to have an EOFError when trying to parse the actual size. Which is not reflected.
+                log.warning(
+                    "Mismatch in read size (%i) and actual EXTRA_DATA_BLOCK length (%i) for data block (%s)",
+                    read_size,
+                    len(block_data),
+                    block_name,
+                )
+                return
+
             struct = c_lnk.typedefs[block_name](block_data)
 
             if block_name == "PROPERTY_STORE_PROPS":
@@ -91,7 +107,7 @@ class LnkExtraData:
             self.extradata.update({block_name: struct})
 
         else:
-            log.error(f"Unknown extra data block encountered with signature 0x{signature:x}")
+            log.warning(f"Unknown extra data block encountered with signature 0x{signature:x}")
 
         # keep calling parse untill the TERMINAL_BLOCK is hit.
         self._parse(fh)
@@ -198,7 +214,6 @@ class LnkInfo:
                     "Unicode link_info_header encountered. Size bigger than 0x00000024. Size encountered:"
                     f"{self.linkinfo_header.link_info_header_size}"
                 )
-                raise NotImplementedError("Unicode link_info_header parsing not yet implemented")
                 # TODO parse unicode headers. none encountered yet.
 
             self.linkinfo_body = c_lnk.LINK_INFO_BODY(fh.read(LINK_INFO_BODY_SIZE))
@@ -260,6 +275,7 @@ class LnkInfo:
             )
 
         # common_path_suffix is always present, even when its value is just 0x00
+        # or when the flag common_network_relative_link_and_pathsuffix indicates otherwise
         buff.seek(self.linkinfo_body.common_pathsuffix_offset)
         common_path_suffix = c_lnk.COMMON_PATH_SUFFIX(buff.read()).common_path_suffix
 
@@ -346,8 +362,7 @@ class Lnk:
     reference: https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-SHLLINK/%5bMS-SHLLINK%5d.pdf
 
     Args:
-        fh: A file-like object to a link file.
-        link_header: A SHELL_LINK_HEADER structure.
+        path: (string) Path to a link file.
         target_idlist: A LnkTargetIdList object.
         linkinfo: A LnkInfo object.
         stringdata: A LnkStringData object.
@@ -356,14 +371,17 @@ class Lnk:
 
     def __init__(
         self,
-        fh: Optional[BinaryIO] = None,
-        link_header: Optional[c_lnk.SHELL_LINK_HEADER] = None,
+        path: Union[str, Path],
         target_idlist: Optional[LnkTargetIdList] = None,
         linkinfo: Optional[LnkInfo] = None,
         stringdata: Optional[LnkStringData] = None,
         extradata: Optional[LnkExtraData] = None,
     ):
-        self.fh = fh.open("rb")
+        if isinstance(path, str):
+            self.fh = Path(path)
+        else:
+            self.fh = path.open("rb")
+
         self.flags = None
         self.link_header = self._parse_header(self.fh)
         self.target_idlist = LnkTargetIdList()
