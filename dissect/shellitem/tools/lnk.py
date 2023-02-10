@@ -28,12 +28,14 @@ def parse(path: Path):
         lnk_iconlocation = lnk_file.stringdata.icon_location.string if lnk_file.flag("has_icon_location") else None
         lnk_arguments = lnk_file.stringdata.command_line_arguments.string if lnk_file.flag("has_arguments") else None
         local_base_path = (
-            lnk_file.linkinfo.local_base_path.decode(errors="ignore")
+            lnk_file.linkinfo.local_base_path.decode(errors="backslashreplace")
             if lnk_file.flag("has_link_info") and lnk_file.linkinfo.flag("volumeid_and_local_basepath")
             else None
         )
         common_path_suffix = (
-            lnk_file.linkinfo.common_path_suffix.decode(errors="ignore") if lnk_file.flag("has_link_info") else None
+            lnk_file.linkinfo.common_path_suffix.decode(errors="backslashreplace")
+            if lnk_file.flag("has_link_info")
+            else None
         )
 
         if local_base_path and common_path_suffix:

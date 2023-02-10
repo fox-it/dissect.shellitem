@@ -59,9 +59,6 @@ class LnkExtraData:
             block_data = memoryview(fh.read(read_size))
 
             if len(block_data) != read_size:
-                import ipdb
-
-                ipdb.set_trace()
                 # Some malicous lnk files have a mismatch in the size indicated in the data block and actual bytes red.
                 # This causes cstruct to have an EOFError when trying to parse the actual size. Which is not reflected.
                 log.warning(
