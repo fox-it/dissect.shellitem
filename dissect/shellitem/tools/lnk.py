@@ -28,12 +28,12 @@ def parse(path: Path):
         lnk_iconlocation = lnk_file.stringdata.icon_location.string if lnk_file.flag("has_icon_location") else None
         lnk_arguments = lnk_file.stringdata.command_line_arguments.string if lnk_file.flag("has_arguments") else None
         local_base_path = (
-            lnk_file.linkinfo.local_base_path.decode("raw_unicode_escape")
+            lnk_file.linkinfo.local_base_path.decode(errors="backslashreplace")
             if lnk_file.flag("has_link_info") and lnk_file.linkinfo.flag("volumeid_and_local_basepath")
             else None
         )
         common_path_suffix = (
-            lnk_file.linkinfo.common_path_suffix.decode("raw_unicode_escape")
+            lnk_file.linkinfo.common_path_suffix.decode(errors="backslashreplace")
             if lnk_file.flag("has_link_info")
             else None
         )
@@ -48,12 +48,14 @@ def parse(path: Path):
         if lnk_file.flag("has_link_info"):
             if lnk_file.linkinfo.flag("common_network_relative_link_and_pathsuffix"):
                 lnk_net_name = (
-                    lnk_file.linkinfo.common_network_relative_link.net_name.decode("raw_unicode_escape")
+                    # TODO add codepage CLI flag to decode for supplied codepage
+                    lnk_file.linkinfo.common_network_relative_link.net_name.decode(errors="backslashreplace")
                     if lnk_file.linkinfo.common_network_relative_link.net_name
                     else None
                 )
                 lnk_device_name = (
-                    lnk_file.linkinfo.common_network_relative_link.device_name.decode("raw_unicode_escape")
+                    # TODO add codepage CLI flag to decode for supplied codepage
+                    lnk_file.linkinfo.common_network_relative_link.device_name.decode(errors="backslashreplace")
                     if lnk_file.linkinfo.common_network_relative_link.device_name
                     else None
                 )
@@ -85,7 +87,7 @@ def parse(path: Path):
             f"Machine id link\t\t\t: {machine_id}\n"
             f"Target file modification time\t: {target_mtime}\n"
             f"Target file access time\t\t: {target_atime}\n"
-            f"Target file changed time\t: {target_ctime}"
+            f"Target file changed time\t: {target_ctime}\n"
         )
 
 
@@ -94,11 +96,22 @@ def main():
         description="Parse a .lnk file from your local disk.",
     )
 
-    parser.add_argument("path", metavar="path", type=str, help="Path to .lnk file(s).")
+    parser.add_argument("paths", metavar="paths", type=str, nargs="+", help="Path to .lnk file(s).")
+    parser.add_argument("-v", "--verbose", action="count", default=0, help="Increase verbosity")
 
     args = parser.parse_args()
-    path = Path(args.path)
-    parse(path)
+
+    levels = [logging.WARNING, logging.INFO, logging.DEBUG]
+    level = levels[min(len(levels) - 1, args.verbose)]
+    logging.basicConfig(level=level, format="%(asctime)s %(levelname)s %(message)s")
+
+    for path in args.paths:
+        path = Path(path)
+
+        if path.is_dir():
+            continue
+
+        parse(Path(path))
 
 
 if __name__ == "__main__":
