@@ -49,13 +49,13 @@ def parse(path: Path):
             if lnk_file.linkinfo.flag("common_network_relative_link_and_pathsuffix"):
                 lnk_net_name = (
                     # TODO add codepage CLI flag to decode for supplied codepage
-                    lnk_file.linkinfo.common_network_relative_link.net_name.decode(errors="ignore")
+                    lnk_file.linkinfo.common_network_relative_link.net_name.decode(errors="backslashreplace")
                     if lnk_file.linkinfo.common_network_relative_link.net_name
                     else None
                 )
                 lnk_device_name = (
                     # TODO add codepage CLI flag to decode for supplied codepage
-                    lnk_file.linkinfo.common_network_relative_link.device_name.decode(errors="ignore")
+                    lnk_file.linkinfo.common_network_relative_link.device_name.decode(errors="backslashreplace")
                     if lnk_file.linkinfo.common_network_relative_link.device_name
                     else None
                 )
