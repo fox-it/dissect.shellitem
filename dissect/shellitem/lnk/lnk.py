@@ -375,9 +375,9 @@ class Lnk:
         extradata: Optional[LnkExtraData] = None,
     ):
         if isinstance(path, str):
-            self.fh = Path(path)
-        else:
-            self.fh = path.open("rb")
+            path = Path(path)
+
+        self.fh = path.open("rb")
 
         self.flags = None
         self.link_header = self._parse_header(self.fh)
