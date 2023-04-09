@@ -1,5 +1,5 @@
 import logging
-from io import BytesIO
+from io import BufferedReader, BytesIO
 from pathlib import Path
 from struct import unpack
 from typing import Any, BinaryIO, Optional, Union
@@ -368,7 +368,8 @@ class Lnk:
 
     def __init__(
         self,
-        path: Union[str, Path],
+        path: Optional[Union[str, Path]] = None,
+        fh: Optional[BufferedReader] = None,
         target_idlist: Optional[LnkTargetIdList] = None,
         linkinfo: Optional[LnkInfo] = None,
         stringdata: Optional[LnkStringData] = None,
@@ -377,7 +378,10 @@ class Lnk:
         if isinstance(path, str):
             path = Path(path)
 
-        self.fh = path.open("rb")
+        if isinstance(fh, BufferedReader):
+            self.fh = fh
+        else:
+            self.fh = path.open("rb")
 
         self.flags = None
         self.link_header = self._parse_header(self.fh)
