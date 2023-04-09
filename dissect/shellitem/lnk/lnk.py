@@ -368,20 +368,13 @@ class Lnk:
 
     def __init__(
         self,
-        path: Optional[Union[str, Path]] = None,
-        fh: Optional[BufferedReader] = None,
+        fh: BufferedReader,
         target_idlist: Optional[LnkTargetIdList] = None,
         linkinfo: Optional[LnkInfo] = None,
         stringdata: Optional[LnkStringData] = None,
         extradata: Optional[LnkExtraData] = None,
     ):
-        if isinstance(path, str):
-            path = Path(path)
-
-        if isinstance(fh, BufferedReader):
-            self.fh = fh
-        else:
-            self.fh = path.open("rb")
+        self.fh = fh
 
         self.flags = None
         self.link_header = self._parse_header(self.fh)
