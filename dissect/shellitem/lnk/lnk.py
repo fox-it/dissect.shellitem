@@ -1,6 +1,5 @@
 import logging
 from io import BufferedReader, BytesIO
-from pathlib import Path
 from struct import unpack
 from typing import Any, BinaryIO, Optional, Union
 from uuid import UUID
