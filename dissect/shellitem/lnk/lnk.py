@@ -1,7 +1,7 @@
 import logging
 from io import BufferedReader, BytesIO
 from struct import unpack
-from typing import Any, BinaryIO, Optional, Union
+from typing import Any, BinaryIO, Optional
 from uuid import UUID
 
 from dissect.util.stream import RangeStream
