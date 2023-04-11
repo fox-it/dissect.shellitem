@@ -12,7 +12,7 @@ logging.raiseExceptions = False
 
 
 def parse(path: Path):
-    lnk_file = Lnk(path)
+    lnk_file = Lnk(path.open("rb"))
     lnk_net_name = lnk_device_name = None
 
     if lnk_file.link_header:

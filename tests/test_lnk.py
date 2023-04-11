@@ -4,7 +4,8 @@ from dissect.shellitem.lnk import Lnk, c_lnk
 
 
 def test_xp_remote_lnk_file(xp_remote_lnk_file):
-    lnk_file = Lnk(xp_remote_lnk_file)
+    fh = xp_remote_lnk_file.open("rb")
+    lnk_file = Lnk(fh)
 
     assert lnk_file.link_header.header_size == 0x4C
     assert str(lnk_file.clsid) == "00021401-0000-0000-c000-000000000046"
@@ -57,7 +58,9 @@ def test_xp_remote_lnk_file(xp_remote_lnk_file):
 
 
 def test_xp_remote_lnk_dir(xp_remote_lnk_dir):
-    lnk_file = Lnk(xp_remote_lnk_dir)
+    fh = xp_remote_lnk_dir.open("rb")
+    lnk_file = Lnk(fh)
+
     assert lnk_file.link_header.header_size == 0x4C
     assert str(lnk_file.clsid) == "00021401-0000-0000-c000-000000000046"
 
@@ -103,7 +106,8 @@ def test_xp_remote_lnk_dir(xp_remote_lnk_dir):
 
 
 def test_win7_local_lnk_dir(win7_local_lnk_dir):
-    lnk_file = Lnk(win7_local_lnk_dir)
+    fh = win7_local_lnk_dir.open("rb")
+    lnk_file = Lnk(fh)
 
     assert lnk_file.link_header.header_size == 0x4C
     assert str(lnk_file.clsid) == "00021401-0000-0000-c000-000000000046"
@@ -165,7 +169,8 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir):
 
 
 def test_common_path_suffix(win81_downloads_lnk_dir):
-    downloads = Lnk(win81_downloads_lnk_dir)
+    fh = win81_downloads_lnk_dir.open("rb")
+    downloads = Lnk(fh)
 
     link_info = downloads.linkinfo.link_info
     link_info_flags = link_info.link_info_flags

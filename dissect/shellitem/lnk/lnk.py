@@ -1,8 +1,7 @@
 import logging
-from io import BytesIO
-from pathlib import Path
+from io import BufferedReader, BytesIO
 from struct import unpack
-from typing import Any, BinaryIO, Optional, Union
+from typing import Any, BinaryIO, Optional
 from uuid import UUID
 
 from dissect.util.stream import RangeStream
@@ -368,16 +367,13 @@ class Lnk:
 
     def __init__(
         self,
-        path: Union[str, Path],
+        fh: BufferedReader,
         target_idlist: Optional[LnkTargetIdList] = None,
         linkinfo: Optional[LnkInfo] = None,
         stringdata: Optional[LnkStringData] = None,
         extradata: Optional[LnkExtraData] = None,
     ):
-        if isinstance(path, str):
-            path = Path(path)
-
-        self.fh = path.open("rb")
+        self.fh = fh
 
         self.flags = None
         self.link_header = self._parse_header(self.fh)
