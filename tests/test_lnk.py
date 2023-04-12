@@ -3,6 +3,17 @@ from dissect.util.ts import uuid1timestamp
 from dissect.shellitem.lnk import Lnk, c_lnk
 
 
+def test_xp_custom_destination_remote_lnk_file(xp_modified_remote_lnk_file):
+    # The first 16 bytes contain the LNK GUID a to simulate a Jumplist CustomDestination file
+    fh = xp_modified_remote_lnk_file.open("rb")
+    fh.seek(16)
+
+    lnk_file = Lnk(fh)
+
+    assert lnk_file.link_header.header_size == 0x4C
+    assert str(lnk_file.clsid) == "00021401-0000-0000-c000-000000000046"
+
+
 def test_xp_remote_lnk_file(xp_remote_lnk_file):
     fh = xp_remote_lnk_file.open("rb")
     lnk_file = Lnk(fh)
