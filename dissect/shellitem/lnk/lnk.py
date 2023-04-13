@@ -183,7 +183,7 @@ class LnkStringData:
 
 class LnkInfo:
     """This class represents a LNK file's LINK_INFO structure. The optional LINK_INFO structure specifies information
-    unnecessary to resolve a link target if it is not found in its original location. This includes information about
+    necessary to resolve a link target if it is not found in its original location. This includes information about
     the volume that the target was stored on, the mapped drive letter, and a UNC path if existed when the link was
     created.
 
