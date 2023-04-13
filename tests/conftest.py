@@ -9,6 +9,11 @@ def absolute_path(filename):
 
 
 @pytest.fixture
+def xp_modified_remote_lnk_file():
+    return Path(absolute_path("data/modified_remote.file.xp.lnk"))
+
+
+@pytest.fixture
 def xp_remote_lnk_file():
     return Path(absolute_path("data/remote.file.xp.lnk"))
 

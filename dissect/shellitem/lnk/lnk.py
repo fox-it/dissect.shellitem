@@ -21,7 +21,7 @@ logging.raiseExceptions = False
 
 
 class LnkExtraData:
-    """Class that represents the a LNK file's EXTRA_DATA stucture
+    """Class that represents the a LNK file's EXTRA_DATA structure
     This optional structure hold additional optional structures that convey additional information about a link target
 
     Args:
@@ -35,7 +35,7 @@ class LnkExtraData:
     #                    KNOWN_FOLDER_PROPS / PROPERTY_STORE_PROPS /
     #                    SHIM_PROPS / SPECIAL_FOLDER_PROPS /
     #                    TRACKER_PROPS / VISTA_AND_ABOVE_IDLIST_PROPS
-    # This is kinda the same as LnkStringData only that the defined extra stuctures can wildly vary
+    # This is kinda the same as LnkStringData only that the defined extra structures can wildly vary
     def __init__(self, fh: Optional[BinaryIO] = None):
         self.extradata = {}
 
@@ -58,7 +58,7 @@ class LnkExtraData:
             block_data = memoryview(fh.read(read_size))
 
             if len(block_data) != read_size:
-                # Some malicous lnk files have a mismatch in the size indicated in the data block and actual bytes red.
+                # Some malicious lnk files have a mismatch in the size indicated in the data block and actual bytes red.
                 # This causes cstruct to have an EOFError when trying to parse the actual size. Which is not reflected.
                 log.warning(
                     "Mismatch in read size (%i) and actual EXTRA_DATA_BLOCK length (%i) for data block (%s)",
@@ -105,7 +105,7 @@ class LnkExtraData:
         else:
             log.warning(f"Unknown extra data block encountered with signature 0x{signature:x}")
 
-        # keep calling parse untill the TERMINAL_BLOCK is hit.
+        # keep calling parse until the TERMINAL_BLOCK is hit.
         self._parse(fh)
 
     def _parse_guid(self, guid: bytes, endianness: str = "<") -> UUID:
@@ -183,8 +183,9 @@ class LnkStringData:
 
 class LnkInfo:
     """This class represents a LNK file's LINK_INFO structure. The optional LINK_INFO structure specifies information
-    necesarry to resolve a link target if it is not found in its original location. This includes information about the
-    volume that the target was stored on, the mapped drive letter, and a UNC path if existed when the link was created.
+    necessary to resolve a link target if it is not found in its original location. This includes information about
+    the volume that the target was stored on, the mapped drive letter, and a UNC path if existed when the link was
+    created.
 
     Args:
         fh: A file-like objet to a LINK_INFO structure
@@ -203,7 +204,7 @@ class LnkInfo:
             self.linkinfo_header = c_lnk.LINK_INFO_HEADER(fh.read(LINK_INFO_HEADER_SIZE))
             self.flags = self.linkinfo_header.link_info_flags
 
-            # values higher than 0x24 indicate the presense of optional fields in the link info structure
+            # values higher than 0x24 indicate the presence of optional fields in the link info structure
             # if so the LocalBasePathOffsetUnicode and CommonPathSuffixOffsetUnicode fields are present
             if self.linkinfo_header.link_info_header_size >= 0x00000024:
                 log.error(
@@ -290,7 +291,7 @@ class LnkInfo:
         )
 
     def flag(self, name: str) -> int:
-        """Retuns whether supplied flag is set.
+        """Returns whether supplied flag is set.
 
         Args:
             name: Name of the flag
@@ -352,7 +353,7 @@ class LnkTargetIdList:
 class Lnk:
     """This class represents a LNK file's SHELL_LINK_HEADER, and the remainder of the parsed LNK file structures.
     This SHELL_LINK_HEADER structure contains identification information, timestamps, and flags that specify the
-    pressence of optional structures.
+    presence of optional structures.
 
     Parses a .lnk file (aka Microsoft Shell Item) according to the MS-SHLLINK specification
     reference: https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-SHLLINK/%5bMS-SHLLINK%5d.pdf
@@ -403,7 +404,7 @@ class Lnk:
             self.extradata = LnkExtraData(self.fh)
 
     def flag(self, name: str) -> int:
-        """Retuns whether supplied flag is set.
+        """Returns whether supplied flag is set.
 
         Args:
             name: Name of the flag
@@ -414,8 +415,19 @@ class Lnk:
         return self.flags & c_lnk.LINK_FLAGS[name]
 
     def _parse_header(self, fh: Optional[BinaryIO]) -> Optional[c_lnk.SHELL_LINK_HEADER]:
+        """Returns LINK header.
+
+        Parse the header in a buffer that does not start at offset 0
+
+        Args:
+            fh: File object
+
+        Returns:
+            LINK header if size is 0x4C, else none
+        """
+        offset = fh.tell()
         header_size = unpack("I", fh.read(4))[0]
-        fh.seek(0)
+        fh.seek(offset)
 
         if header_size == LINK_HEADER_SIZE:
             link_header = c_lnk.SHELL_LINK_HEADER(fh.read(LINK_HEADER_SIZE))
