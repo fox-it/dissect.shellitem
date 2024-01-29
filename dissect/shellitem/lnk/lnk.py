@@ -323,7 +323,7 @@ class LnkTargetIdList:
         size: Size of the TARGET_IDLIST structure
     """
 
-    def __init__(self, fh: Optional[BinaryIO] = None, size: Optional[int] = None) -> None:
+    def __init__(self, fh: Optional[BinaryIO] = None, size: Optional[int] = None):
         self.target_idlist = None
         self.idlist = None
         self.size = None
