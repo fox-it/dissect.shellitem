@@ -373,7 +373,7 @@ class Lnk:
         linkinfo: Optional[LnkInfo] = None,
         stringdata: Optional[LnkStringData] = None,
         extradata: Optional[LnkExtraData] = None,
-    ) -> None:
+    ):
         self.fh = fh
 
         self.flags = None
