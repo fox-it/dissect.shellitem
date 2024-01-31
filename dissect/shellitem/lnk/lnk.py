@@ -68,15 +68,15 @@ class LnkExtraData:
                 )
                 return
 
-            struct = c_lnk.typedefs[block_name](block_data)
+            if block_name == "VISTA_AND_ABOVE_IDLIST_PROPS":
+                struct = LnkTargetIdList(BytesIO(block_data), read_size)
+            else:
+                struct = c_lnk.typedefs[block_name](block_data)
 
             if block_name == "PROPERTY_STORE_PROPS":
                 # TODO implement actual serialized property parsing
                 guid = self._parse_guid(struct.format_id)
                 struct._values.update({"format_id": guid})
-
-            elif block_name == "VISTA_AND_ABOVE_IDLIST_PROPS":
-                struct = LnkTargetIdList(BytesIO(block_data), read_size)
 
             elif block_name == "TRACKER_PROPS":
                 for name, value in struct._values.items():
@@ -103,7 +103,7 @@ class LnkExtraData:
             self.extradata.update({block_name: struct})
 
         else:
-            log.warning(f"Unknown extra data block encountered with signature 0x{signature:x}")
+            log.warning("Unknown extra data block encountered with signature %x", signature)
 
         # keep calling parse until the TERMINAL_BLOCK is hit.
         self._parse(fh)
@@ -111,8 +111,8 @@ class LnkExtraData:
     def _parse_guid(self, guid: bytes, endianness: str = "<") -> UUID:
         if endianness == "<":
             return UUID(bytes_le=guid)
-        else:
-            return UUID(bytes=guid)
+
+        return UUID(bytes=guid)
 
     def __getattr__(self, attr: str) -> Any:
         try:
@@ -208,8 +208,8 @@ class LnkInfo:
             # if so the LocalBasePathOffsetUnicode and CommonPathSuffixOffsetUnicode fields are present
             if self.linkinfo_header.link_info_header_size >= 0x00000024:
                 log.error(
-                    "Unicode link_info_header encountered. Size bigger than 0x00000024. Size encountered:"
-                    f"{self.linkinfo_header.link_info_header_size}"
+                    "Unicode link_info_header encountered. Size bigger than 0x00000024. Size encountered: %x",
+                    self.linkinfo_header.link_info_header_size,
                 )
                 # TODO parse unicode headers. none encountered yet.
 
@@ -435,15 +435,17 @@ class Lnk:
 
             if link_clsid == "00021401-0000-0000-c000-000000000046":
                 return link_header
-            else:
-                log.info(f"Encountered invalid link file header: {link_header}. Skipping.")
-                return None
-        else:
-            log.info(
-                f"Encountered invalid link file with magic header size 0x{header_size:x} - "
-                f"magic header size should be 0x{LINK_HEADER_SIZE:x}. Skipping."
-            )
+
+            log.info("Encountered invalid link file header: %s. Skipping.", link_header)
             return None
+
+        log.info(
+            "Encountered invalid link file with magic header size 0x%x. \
+            Magic header size should be 0x%x. Skipping.",
+            header_size,
+            LINK_HEADER_SIZE,
+        )
+        return None
 
     @property
     def clsid(self) -> UUID:

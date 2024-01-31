@@ -1,9 +1,11 @@
+from pathlib import Path
+
 from dissect.util.ts import uuid1timestamp
 
 from dissect.shellitem.lnk import Lnk, c_lnk
 
 
-def test_xp_custom_destination_remote_lnk_file(xp_modified_remote_lnk_file):
+def test_xp_custom_destination_remote_lnk_file(xp_modified_remote_lnk_file: Path) -> None:
     # The first 16 bytes contain the LNK GUID a to simulate a Jumplist CustomDestination file
     fh = xp_modified_remote_lnk_file.open("rb")
     fh.seek(16)
@@ -14,7 +16,7 @@ def test_xp_custom_destination_remote_lnk_file(xp_modified_remote_lnk_file):
     assert str(lnk_file.clsid) == "00021401-0000-0000-c000-000000000046"
 
 
-def test_xp_remote_lnk_file(xp_remote_lnk_file):
+def test_xp_remote_lnk_file(xp_remote_lnk_file: Path) -> None:
     fh = xp_remote_lnk_file.open("rb")
     lnk_file = Lnk(fh)
 
@@ -68,7 +70,7 @@ def test_xp_remote_lnk_file(xp_remote_lnk_file):
     assert uuid1timestamp(tracker_props.file_droid.time).ctime() == "Wed Feb  8 07:52:55 2006"
 
 
-def test_xp_remote_lnk_dir(xp_remote_lnk_dir):
+def test_xp_remote_lnk_dir(xp_remote_lnk_dir: Path) -> None:
     fh = xp_remote_lnk_dir.open("rb")
     lnk_file = Lnk(fh)
 
@@ -81,7 +83,7 @@ def test_xp_remote_lnk_dir(xp_remote_lnk_dir):
     idlist = lnk_file.target_idlist.idlist
     assert len(idlist.itemid_list) == 7
     assert idlist.terminalid == b"\x00\x00"
-    assert all([entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list])
+    assert all(entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list)
 
     assert flags & c_lnk.LINK_FLAGS.has_link_info
     link_info = lnk_file.linkinfo.link_info
@@ -116,7 +118,7 @@ def test_xp_remote_lnk_dir(xp_remote_lnk_dir):
     assert uuid1timestamp(tracker_props.file_droid.time).ctime() == "Tue Jul 21 07:31:44 2009"
 
 
-def test_win7_local_lnk_dir(win7_local_lnk_dir):
+def test_win7_local_lnk_dir(win7_local_lnk_dir: Path) -> None:
     fh = win7_local_lnk_dir.open("rb")
     lnk_file = Lnk(fh)
 
@@ -179,7 +181,7 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir):
     assert str(property_store_props.format_id) == "b725f130-47ef-101a-a5f1-02608c9eebac"
 
 
-def test_common_path_suffix(win81_downloads_lnk_dir):
+def test_common_path_suffix(win81_downloads_lnk_dir: Path) -> None:
     fh = win81_downloads_lnk_dir.open("rb")
     downloads = Lnk(fh)
 
@@ -190,3 +192,13 @@ def test_common_path_suffix(win81_downloads_lnk_dir):
     assert link_info_flags & c_lnk.LINK_INFO_FLAGS.common_network_relative_link_and_pathsuffix == 0
     assert link_info.common_path_suffix == b""
     assert link_info.common_path_suffix.decode() == ""
+
+
+def test_vista_and_above_idlist_lnk_props(vista_idlist_lnk_file: Path) -> None:
+    fh = vista_idlist_lnk_file.open("rb")
+    lnk_file = Lnk(fh)
+    vista_props = lnk_file.extradata.extradata["VISTA_AND_ABOVE_IDLIST_PROPS"]
+
+    assert vista_props.size == 0x62  # 98
+    assert vista_props.idlist.itemid_list[0].itemid_size == 0x60  # 96
+    assert len(vista_props.idlist.itemid_list[0].data) == 0x5E  # 94
