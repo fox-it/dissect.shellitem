@@ -76,17 +76,17 @@ class LnkExtraData:
             if block_name == "PROPERTY_STORE_PROPS":
                 # TODO implement actual serialized property parsing
                 guid = self._parse_guid(struct.format_id)
-                struct._values.update({"format_id": guid})
+                setattr(struct, "format_id", guid)
 
             elif block_name == "TRACKER_PROPS":
                 for name, value in struct._values.items():
                     if "droid" in name:
                         guid = self._parse_guid(value)
-                        struct._values.update({name: guid})
+                        setattr(struct, name, guid)
 
             elif block_name == "KNOWN_FOLDER_PROPS":
                 guid = self._parse_guid(struct.known_folder_id)
-                struct._values.update({"known_folder_id": guid})
+                setattr(struct, "known_folder_id", guid)
 
             elif (
                 block_name == "ENVIRONMENT_PROPS"
@@ -247,14 +247,14 @@ class LnkInfo:
             header = c_lnk.COMMON_NETWORK_RELATIVE_LINK_HEADER(buff.read(20))
             flags = header.common_network_relative_link_flags
 
-            if flags & flags.enum.valid_device:
+            if flags & c_lnk.COMMON_NETWORK_RELATIVE_LINK_FLAGS.valid_device:
                 offset = buff.seek(start_common_network_relative_link + header.device_name_offset)
                 device_name = c_lnk.DEVICE_NAME(buff.read())
                 read_size = len(device_name.dumps())
                 device_name = device_name.device_name
                 buff.seek(offset + read_size)
 
-            if flags & flags.enum.valid_net_type:
+            if flags & c_lnk.COMMON_NETWORK_RELATIVE_LINK_FLAGS.valid_net_type:
                 offset = buff.seek(start_common_network_relative_link + header.net_name_offset)
                 net_name = c_lnk.NET_NAME(buff.read())
                 read_size = len(net_name.dumps())
