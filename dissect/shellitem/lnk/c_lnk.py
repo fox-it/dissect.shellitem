@@ -1,12 +1,12 @@
 from enum import IntEnum
 from typing import Optional
 
-from dissect import cstruct
+from dissect.cstruct import cstruct
 
 # structs are reconstructed as faithfull as possible from MS documentation
 # reference: https://winprotocoldoc.blob.core.windows.net/productionwindowsarchives/MS-SHLLINK/%5bMS-SHLLINK%5d.pdf
 
-c_lnk_def = """
+lnk_def = """
 flag FILE_ATTRIBUTE : uint32 {
     READONLY                = 0x00000001,
     HIDDEN                  = 0x00000002,
@@ -297,7 +297,7 @@ typedef struct ICON_ENVIRONMENT_PROPS {
 
 typedef struct SPECIAL_FOLDER_PROPS {
     uint32 special_folder_id;          // A 32-bit, unsigned integer that specifies the folder integer ID.
-    uint32 offset;                     // A 32-bit, unsigned integer that specifies the location of the ItemID of the first child segment of the IDList specified by SpecialFolderID. This value is the offset, in bytes, into the link target IDList. 
+    uint32 offset;                     // A 32-bit, unsigned integer that specifies the location of the ItemID of the first child segment of the IDList specified by SpecialFolderID. This value is the offset, in bytes, into the link target IDList.
 };
 
 typedef struct DARWIN_PROPS {
@@ -389,5 +389,4 @@ LINK_EXTRA_DATA_HEADER_SIZE = 0x08
 JUMPLIST_HEADER_SIZE = 0x24
 JUMPLIST_FOOTER = 0xBABFFBAB
 
-c_lnk = cstruct.cstruct()
-c_lnk.load(c_lnk_def)
+c_lnk = cstruct().load(lnk_def)
