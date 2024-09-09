@@ -102,7 +102,7 @@ typedef struct VOLUME_ID {
 };
 
 typedef struct NET_NAME {
-    char net_name[];                            // A NULL–terminated string, as defined by the system default code page, which specifies a server share path; for example, "\\server\share".
+    char net_name[];                            // A NULL–terminated string, as defined by the system default code page, which specifies a server share path; for example, "\\\\server\\share".
 };
 
 typedef struct DEVICE_NAME {
