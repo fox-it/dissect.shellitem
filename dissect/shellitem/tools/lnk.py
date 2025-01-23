@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import logging
 from pathlib import Path
@@ -11,7 +13,7 @@ logging.lastResort = None
 logging.raiseExceptions = False
 
 
-def parse(path: Path):
+def parse(path: Path) -> None:
     lnk_file = Lnk(path.open("rb"))
     lnk_net_name = lnk_device_name = None
 
@@ -45,20 +47,19 @@ def parse(path: Path):
         else:
             lnk_full_path = None
 
-        if lnk_file.flag("has_link_info"):
-            if lnk_file.linkinfo.flag("common_network_relative_link_and_pathsuffix"):
-                lnk_net_name = (
-                    # TODO add codepage CLI flag to decode for supplied codepage
-                    lnk_file.linkinfo.common_network_relative_link.net_name.decode(errors="backslashreplace")
-                    if lnk_file.linkinfo.common_network_relative_link.net_name
-                    else None
-                )
-                lnk_device_name = (
-                    # TODO add codepage CLI flag to decode for supplied codepage
-                    lnk_file.linkinfo.common_network_relative_link.device_name.decode(errors="backslashreplace")
-                    if lnk_file.linkinfo.common_network_relative_link.device_name
-                    else None
-                )
+        if lnk_file.flag("has_link_info") and lnk_file.linkinfo.flag("common_network_relative_link_and_pathsuffix"):
+            lnk_net_name = (
+                # TODO add codepage CLI flag to decode for supplied codepage
+                lnk_file.linkinfo.common_network_relative_link.net_name.decode(errors="backslashreplace")
+                if lnk_file.linkinfo.common_network_relative_link.net_name
+                else None
+            )
+            lnk_device_name = (
+                # TODO add codepage CLI flag to decode for supplied codepage
+                lnk_file.linkinfo.common_network_relative_link.device_name.decode(errors="backslashreplace")
+                if lnk_file.linkinfo.common_network_relative_link.device_name
+                else None
+            )
 
         try:
             machine_id = lnk_file.extradata.TRACKER_PROPS.machine_id.decode()
@@ -91,7 +92,7 @@ def parse(path: Path):
         )
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Parse a .lnk file from your local disk.",
     )

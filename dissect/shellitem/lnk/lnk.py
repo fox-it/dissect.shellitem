@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import logging
 from io import BufferedReader, BytesIO
 from struct import unpack
-from typing import Any, BinaryIO, Optional
+from typing import Any, BinaryIO
 from uuid import UUID
 
 from dissect.util.stream import RangeStream
@@ -36,7 +38,7 @@ class LnkExtraData:
     #                    SHIM_PROPS / SPECIAL_FOLDER_PROPS /
     #                    TRACKER_PROPS / VISTA_AND_ABOVE_IDLIST_PROPS
     # This is kinda the same as LnkStringData only that the defined extra structures can wildly vary
-    def __init__(self, fh: Optional[BinaryIO] = None):
+    def __init__(self, fh: BinaryIO | None = None):
         self.extradata = {}
 
         if fh:
@@ -76,7 +78,7 @@ class LnkExtraData:
             if block_name == "PROPERTY_STORE_PROPS":
                 # TODO implement actual serialized property parsing
                 guid = self._parse_guid(struct.format_id)
-                setattr(struct, "format_id", guid)
+                struct.format_id = guid
 
             elif block_name == "TRACKER_PROPS":
                 for name, value in struct._values.items():
@@ -86,7 +88,7 @@ class LnkExtraData:
 
             elif block_name == "KNOWN_FOLDER_PROPS":
                 guid = self._parse_guid(struct.known_folder_id)
-                setattr(struct, "known_folder_id", guid)
+                struct.known_folder_id = guid
 
             elif (
                 block_name == "ENVIRONMENT_PROPS"
@@ -121,8 +123,7 @@ class LnkExtraData:
             return object.__getattribute__(self, attr)
 
     def __repr__(self) -> str:
-        value_string = " ".join(f"{value}" for value in self.extradata.values())
-        return value_string
+        return " ".join(f"{value}" for value in self.extradata.values())
 
 
 class LnkStringData:
@@ -136,7 +137,7 @@ class LnkStringData:
         lnk_flags: Parsed LINK_HEADER flags
     """
 
-    def __init__(self, fh: Optional[BinaryIO] = None, lnk_flags: Optional[c_lnk.LINK_FLAGS] = None):
+    def __init__(self, fh: BinaryIO | None = None, lnk_flags: c_lnk.LINK_FLAGS | None = None):
         self.flags = None
         self.string_data = None
         if fh:
@@ -177,8 +178,7 @@ class LnkStringData:
             return object.__getattribute__(self, attr)
 
     def __repr__(self) -> str:
-        value_string = " ".join(f"{value}" for value in self.string_data.values())
-        return value_string
+        return " ".join(f"{value}" for value in self.string_data.values())
 
 
 class LnkInfo:
@@ -191,7 +191,7 @@ class LnkInfo:
         fh: A file-like objet to a LINK_INFO structure
     """
 
-    def __init__(self, fh: Optional[BinaryIO] = None):
+    def __init__(self, fh: BinaryIO | None = None):
         self.fh = fh
         self.flags = None
         self.size = None
@@ -220,7 +220,7 @@ class LnkInfo:
             self._parse(buff)
 
     def _parse(self, buff: BinaryIO) -> None:
-        buff.seek((LINK_INFO_HEADER_SIZE + LINK_INFO_BODY_SIZE))
+        buff.seek(LINK_INFO_HEADER_SIZE + LINK_INFO_BODY_SIZE)
         offset = buff.tell()
 
         common_network_relative_link = None
@@ -310,8 +310,7 @@ class LnkInfo:
     def __repr__(self) -> str:
         if self.link_info:
             return self.link_info
-        else:
-            return "<LINK_INFO>"
+        return "<LINK_INFO>"
 
 
 class LnkTargetIdList:
@@ -323,7 +322,7 @@ class LnkTargetIdList:
         size: Size of the TARGET_IDLIST structure
     """
 
-    def __init__(self, fh: Optional[BinaryIO] = None, size: Optional[int] = None):
+    def __init__(self, fh: BinaryIO | None = None, size: int | None = None):
         self.target_idlist = None
         self.idlist = None
         self.size = None
@@ -369,10 +368,10 @@ class Lnk:
     def __init__(
         self,
         fh: BufferedReader,
-        target_idlist: Optional[LnkTargetIdList] = None,
-        linkinfo: Optional[LnkInfo] = None,
-        stringdata: Optional[LnkStringData] = None,
-        extradata: Optional[LnkExtraData] = None,
+        target_idlist: LnkTargetIdList | None = None,
+        linkinfo: LnkInfo | None = None,
+        stringdata: LnkStringData | None = None,
+        extradata: LnkExtraData | None = None,
     ):
         self.fh = fh
 
@@ -414,7 +413,7 @@ class Lnk:
         """
         return self.flags & c_lnk.LINK_FLAGS[name]
 
-    def _parse_header(self, fh: Optional[BinaryIO]) -> Optional[c_lnk.SHELL_LINK_HEADER]:
+    def _parse_header(self, fh: BinaryIO | None) -> c_lnk.SHELL_LINK_HEADER | None:
         """Returns LINK header.
 
         Parse the header in a buffer that does not start at offset 0
