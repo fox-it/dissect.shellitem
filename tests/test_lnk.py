@@ -1,8 +1,13 @@
-from pathlib import Path
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from dissect.util.ts import uuid1timestamp
 
 from dissect.shellitem.lnk import Lnk, c_lnk
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def test_xp_custom_destination_remote_lnk_file(xp_modified_remote_lnk_file: Path) -> None:
@@ -29,7 +34,7 @@ def test_xp_remote_lnk_file(xp_remote_lnk_file: Path) -> None:
     idlist = lnk_file.target_idlist.idlist
     assert len(idlist.itemid_list) == 9
     assert idlist.terminalid == b"\x00\x00"
-    assert all([entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list])
+    assert all(entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list)
 
     assert flags & c_lnk.LINK_FLAGS.has_link_info
     link_info = lnk_file.linkinfo.link_info
@@ -49,7 +54,7 @@ def test_xp_remote_lnk_file(xp_remote_lnk_file: Path) -> None:
     )
     assert common_network_relative_link.net_name_offset == 0x14
     assert common_network_relative_link.device_name_offset == 0x0
-    assert common_network_relative_link.device_name is None
+    assert common_network_relative_link.device_name.device_name == b""
     assert common_network_relative_link.net_provider_type == 0x20000
     assert common_network_relative_link.net_name == b"\\\\ALS-FICHIERS3\\QUALIT\xc9"
     assert link_info.common_path_suffix == b"Archives\\M\xe9thodologie WAS\\Norme de d\xe9veloppement JAVA.doc"
@@ -104,7 +109,7 @@ def test_xp_remote_lnk_dir(xp_remote_lnk_dir: Path) -> None:
 
     assert common_network_relative_link.net_name_offset == 0x14
     assert common_network_relative_link.device_name_offset == 0x0
-    assert common_network_relative_link.device_name is None
+    assert common_network_relative_link.device_name.device_name == b""
     assert common_network_relative_link.net_provider_type == 0x20000
     assert common_network_relative_link.net_name == b"\\\\ALS-FICHIERS3\\QUALIT\xc9"
     assert link_info.common_path_suffix == b"GMAldheris"
@@ -131,7 +136,7 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir: Path) -> None:
     idlist = lnk_file.target_idlist.idlist
     assert len(idlist.itemid_list) == 4
     assert idlist.terminalid == b"\x00\x00"
-    assert all([entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list])
+    assert all(entry.itemid_size == len(entry.dumps()) for entry in idlist.itemid_list)
 
     assert flags & c_lnk.LINK_FLAGS.has_link_info
     link_info = lnk_file.linkinfo.link_info
@@ -159,7 +164,7 @@ def test_win7_local_lnk_dir(win7_local_lnk_dir: Path) -> None:
 
     assert common_network_relative_link.net_name_offset == 0x14
     assert common_network_relative_link.device_name_offset == 0x0
-    assert common_network_relative_link.device_name is None
+    assert common_network_relative_link.device_name.device_name == b""
     assert common_network_relative_link.net_provider_type == 0x20000
     assert common_network_relative_link.net_name == b"\\\\NETBOOK\\Users"
 

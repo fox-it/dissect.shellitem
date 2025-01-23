@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from enum import IntEnum
-from typing import Optional
 
 from dissect.cstruct import cstruct
 
@@ -355,7 +356,7 @@ class EXTRA_DATA_BLOCK_SIGNATURES(IntEnum):
     VISTA_AND_ABOVE_IDLIST_PROPS = 0xA000000C
 
     @classmethod
-    def get_name(cls, value: int) -> Optional[str]:
+    def get_name(cls, value: int) -> str | None:
         """Get the name belonging to the passed value, without raising a ValueError.
 
         Args:
@@ -366,6 +367,7 @@ class EXTRA_DATA_BLOCK_SIGNATURES(IntEnum):
         """
         if cls._has_value(value):
             return cls(value).name
+        return None
 
     @classmethod
     def _has_value(cls, value: int) -> bool:
