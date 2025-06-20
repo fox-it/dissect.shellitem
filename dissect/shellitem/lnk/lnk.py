@@ -81,9 +81,9 @@ class LnkExtraData:
                 struct.format_id = guid
 
             elif block_name == "TRACKER_PROPS":
-                for name, value in struct._values.items():
+                for name in struct.fields:
                     if "droid" in name:
-                        guid = self._parse_guid(value)
+                        guid = self._parse_guid(getattr(struct, name))
                         setattr(struct, name, guid)
 
             elif block_name == "KNOWN_FOLDER_PROPS":
