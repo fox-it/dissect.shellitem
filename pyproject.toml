@@ -35,6 +35,26 @@ homepage = "https://dissect.tools"
 documentation = "https://docs.dissect.tools/en/latest/projects/dissect.shellitem"
 repository = "https://github.com/fox-it/dissect.shellitem"
 
+[dependency-groups]
+test = [
+    "pytest",
+]
+lint = [
+    "ruff==0.13.1",
+    "vermin",
+]
+build = [
+    "build",
+]
+debug = [
+    "ipdb",
+]
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "debug"},
+]
+
 [project.scripts]
 parse-lnk = "dissect.shellitem.tools.lnk:main"
 
