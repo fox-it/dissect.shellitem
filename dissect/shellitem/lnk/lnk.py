@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from io import BufferedReader, BytesIO
+import typing
+from io import BytesIO
 from struct import unpack
 from typing import Any, BinaryIO
 from uuid import UUID
@@ -17,13 +18,17 @@ from dissect.shellitem.lnk.c_lnk import (
     c_lnk,
 )
 
+if typing.TYPE_CHECKING:
+    from io import BufferedReader
+
 log = logging.getLogger(__name__)
 logging.lastResort = None
 logging.raiseExceptions = False
 
 
 class LnkExtraData:
-    """Class that represents the a LNK file's EXTRA_DATA structure
+    """Class that represents the a LNK file's EXTRA_DATA structure.
+
     This optional structure hold additional optional structures that convey additional information about a link target
 
     Args:
