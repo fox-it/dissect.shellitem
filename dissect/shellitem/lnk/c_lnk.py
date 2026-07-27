@@ -140,7 +140,7 @@ typedef struct LINK_INFO_HEADER {
     uint32 link_info_size;                      // A 32-bit, unsigned integer that specifies the size, in bytes, of the LinkInfo structure. All offsets specified in this structure MUST be less than this value, and all strings contained in this structure MUST fit within the extent defined by this size.
     uint32 link_info_header_size;               // A 32-bit, unsigned integer that specifies the size, in bytes, of the LinkInfo header section, which is composed of the LinkInfoSize, LinkInfoHeaderSize, LinkInfoFlags, VolumeIDOffset, LocalBasePathOffset, CommonNetworkRelativeLinkOffset, CommonPathSuffixOffset fields, and, if included, the LocalBasePathOffsetUnicode and CommonPathSuffixOffsetUnicode fields.
     LINK_INFO_FLAGS link_info_flags;            // Flags that specify whether the VolumeID, LocalBasePath, LocalBasePathUnicode, and CommonNetworkRelativeLink fields are present in this structure.
-}
+};
 
 typedef struct LINK_INFO_BODY {
     uint32 volumeid_offset;                     // A 32-bit, unsigned integer that specifies the location of the VolumeID field. If the VolumeIDAndLocalBasePath flag is set, this value is an offset, in bytes, from the start of the LinkInfo structure; otherwise, this value MUST be zero.
@@ -278,7 +278,7 @@ typedef struct CUSTOMDESTINATION_LINK_HEADER {
     uint32 customdestination_version[4];
     uint32 jumplist_entries;
     char customdestination_clsid[16];
-}
+};
 
 typedef struct VISTA_AND_ABOVE_IDLIST_PROPS {
     //uint32 block_size;              // A 32-bit, unsigned integer that specifies the size of the VistaAndAboveIDListDataBlock structure. This value MUST be greater than or equal to 0x0000000A.
