@@ -78,7 +78,7 @@ class LnkExtraData:
             if block_name == "VISTA_AND_ABOVE_IDLIST_PROPS":
                 struct = LnkTargetIdList(BytesIO(block_data), read_size)
             else:
-                struct = c_lnk.types[block_name](block_data)
+                struct = c_lnk.resolve(block_name)(block_data)
 
             if block_name == "PROPERTY_STORE_PROPS":
                 # TODO implement actual serialized property parsing
