@@ -78,7 +78,7 @@ class LnkExtraData:
             if block_name == "VISTA_AND_ABOVE_IDLIST_PROPS":
                 struct = LnkTargetIdList(BytesIO(block_data), read_size)
             else:
-                struct = c_lnk.typedefs[block_name](block_data)
+                struct = c_lnk.resolve(block_name)(block_data)
 
             if block_name == "PROPERTY_STORE_PROPS":
                 # TODO implement actual serialized property parsing
@@ -86,7 +86,7 @@ class LnkExtraData:
                 struct.format_id = guid
 
             elif block_name == "TRACKER_PROPS":
-                for name in struct.fields:
+                for name in struct.__members__:
                     if "droid" in name:
                         guid = self._parse_guid(getattr(struct, name))
                         setattr(struct, name, guid)
